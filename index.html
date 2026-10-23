@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07120f">
+  <title>For Scola | A Poem in Three Acts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #07120f;
+      --paper: #f3eee2;
+      --muted: #a8afa3;
+      --gold: #d8bc79;
+      --gold-soft: rgba(216, 188, 121, 0.16);
+      --serif: 'Cormorant Garamond', Georgia, serif;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      --glow: rgba(98, 126, 92, 0.17);
+      margin: 0;
+      min-height: 100svh;
+      overflow: hidden;
+      color: var(--paper);
+      background:
+        radial-gradient(ellipse at 50% 45%, var(--glow), transparent 56%),
+        radial-gradient(ellipse at 50% 100%, rgba(139, 102, 54, 0.08), transparent 50%),
+        var(--ink);
+      font-family: var(--sans);
+      transition: background 2.5s ease;
+    }
+
+    body[data-act="2"] { --glow: rgba(115, 126, 94, 0.19); }
+    body[data-act="3"] { --glow: rgba(153, 119, 69, 0.2); }
+    body[data-act="dedication"] { --glow: rgba(177, 145, 85, 0.23); }
+
+    #night-sky {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.11;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
+    }
+
+    .topline, .controls, .progress-wrap, main {
+      position: relative;
+      z-index: 2;
+    }
+
+    .topline {
+      position: absolute;
+      top: 34px;
+      left: clamp(22px, 5vw, 72px);
+      right: clamp(22px, 5vw, 72px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+    }
+
+    .wordmark { color: var(--gold); }
+    .edition { opacity: 0.72; }
+
+    main {
+      display: grid;
+      min-height: 100svh;
+      place-items: center;
+      padding: 96px 24px 112px;
+      text-align: center;
+    }
+
+    .scene {
+      width: min(820px, 100%);
+      animation: scene-in 1.6s cubic-bezier(.2,.7,.2,1) both;
+    }
+
+    .scene[hidden] { display: none; }
+
+    .kicker {
+      margin: 0 0 25px;
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, .poem-line, .dedication-name, .signature {
+      font-family: var(--serif);
+      font-weight: 400;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(76px, 14vw, 156px);
+      line-height: 0.82;
+      color: var(--paper);
+    }
+
+    .intro-note {
+      margin: 30px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+    }
+
+    .act-title {
+      margin: 0 0 35px;
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.27em;
+      text-transform: uppercase;
+    }
+
+    .poem-lines {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+    }
+
+    .poem-line {
+      max-width: 100%;
+      margin: 0;
+      color: var(--paper);
+      font-size: clamp(25px, 4.1vw, 43px);
+      line-height: 1.2;
+      opacity: 0;
+      transform: translateY(15px);
+      transition: opacity 1.7s ease, transform 1.7s cubic-bezier(.2,.7,.2,1);
+    }
+
+    .poem-line.visible { opacity: 1; transform: translateY(0); }
+    .poem-line:nth-child(2) { transition-delay: 0.12s; }
+    .poem-line:nth-child(3) { transition-delay: 0.24s; }
+
+    .dedication-name {
+      margin: 0;
+      color: var(--paper);
+      font-size: clamp(72px, 13vw, 138px);
+      line-height: 0.9;
+    }
+
+    .signature {
+      margin: 22px 0 0;
+      color: var(--gold);
+      font-size: clamp(25px, 4vw, 38px);
+      font-style: italic;
+    }
+
+    .controls {
+      position: fixed;
+      right: 0;
+      bottom: 25px;
+      left: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      min-height: 42px;
+      border: 0;
+      color: var(--paper);
+      background: transparent;
+      font: 500 10px var(--sans);
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    button:focus-visible { outline: 1px solid var(--gold); outline-offset: 5px; }
+
+    .step-button {
+      min-width: 48px;
+      padding: 0 7px;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    #play-button {
+      min-width: 136px;
+      padding: 0 16px;
+      border: 1px solid rgba(216, 188, 121, 0.56);
+      color: var(--gold);
+      transition: color 180ms ease, background 180ms ease;
+    }
+
+    #play-button:hover { color: var(--ink); background: var(--gold); }
+
+    #sound-button {
+      min-width: 90px;
+      color: var(--muted);
+    }
+
+    #sound-button[aria-pressed="true"] { color: var(--gold); }
+
+    #voice-button {
+      min-width: 78px;
+      color: var(--gold);
+    }
+
+    #voice-button[aria-pressed="false"] { color: var(--muted); }
+
+    .edition {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .edition:hover { color: var(--gold); }
+
+    .timeline {
+      position: fixed;
+      right: clamp(22px, 5vw, 72px);
+      bottom: 82px;
+      left: clamp(22px, 5vw, 72px);
+      display: grid;
+      gap: 5px;
+    }
+
+    .time-readout {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #seek-slider {
+      width: 100%;
+      height: 20px;
+      margin: 0;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+      touch-action: pan-y;
+    }
+
+    #seek-slider:focus-visible { outline: 1px solid var(--gold); outline-offset: 2px; }
+
+    #seek-slider::-webkit-slider-runnable-track {
+      height: 2px;
+      background: linear-gradient(to right, var(--gold) 0 var(--seek-progress, 0%), rgba(243, 238, 226, 0.2) var(--seek-progress, 0%) 100%);
+    }
+
+    #seek-slider::-moz-range-track {
+      height: 2px;
+      background: rgba(243, 238, 226, 0.2);
+    }
+
+    #seek-slider::-moz-range-progress { height: 2px; background: var(--gold); }
+
+    #seek-slider::-webkit-slider-thumb {
+      width: 10px;
+      height: 10px;
+      margin-top: -4px;
+      appearance: none;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px rgba(216, 188, 121, 0.45);
+    }
+
+    #seek-slider::-moz-range-thumb {
+      width: 7px;
+      height: 7px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px rgba(216, 188, 121, 0.45);
+    }
+
+    @keyframes scene-in {
+      from { opacity: 0; transform: translateY(9px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .topline { top: 24px; font-size: 9px; }
+      .edition { letter-spacing: 0.1em; }
+      main { padding: 88px 22px 112px; }
+      .poem-lines { gap: 13px; }
+      .poem-line { font-size: clamp(25px, 7vw, 34px); }
+      .controls { bottom: 24px; gap: 5px; }
+      .step-button { min-width: 42px; padding: 0 4px; }
+      #play-button { min-width: 126px; padding: 0 10px; }
+      #sound-button { min-width: 76px; }
+      #voice-button { min-width: 70px; }
+      .timeline { bottom: 78px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body data-act="intro">
+  <canvas id="night-sky" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="topline" aria-label="Poem presentation">
+    <span class="wordmark">A small constellation</span>
+    <a class="edition" id="keepsake-link" href="Scola-share/keepsake-card.html">Keepsake card</a>
+  </header>
+
+  <main>
+    <section class="scene" id="intro-scene" aria-labelledby="intro-title">
+      <p class="kicker">Written in the quiet between words</p>
+      <h1 id="intro-title">For<br>Scola</h1>
+      <p class="intro-note">Three acts · One minute</p>
+    </section>
+    <section class="scene" id="poem-scene" aria-live="polite" aria-atomic="true" hidden>
+      <p class="act-title" id="act-title"></p>
+      <div class="poem-lines" id="poem-lines"></div>
+    </section>
+    <section class="scene" id="dedication-scene" aria-live="polite" hidden>
+      <p class="kicker">And, beneath every word</p>
+      <p class="dedication-name">Scola</p>
+      <p class="signature">Made for you</p>
+    </section>
+  </main>
+
+  <div class="timeline" aria-label="Poem timeline">
+    <div class="time-readout" aria-live="off">
+      <span id="current-time">0:00</span>
+      <span id="total-time">1:00</span>
+    </div>
+    <input id="seek-slider" type="range" min="0" max="60" step="0.1" value="0" aria-label="Seek through poem" aria-valuetext="0 minutes, 0 seconds">
+  </div>
+
+  <nav class="controls" aria-label="Presentation controls">
+    <button id="previous-button" class="step-button" type="button" aria-label="Previous stanza" title="Previous stanza">Prev</button>
+    <button id="play-button" type="button">Begin the poem</button>
+    <button id="next-button" class="step-button" type="button" aria-label="Next stanza" title="Next stanza">Next</button>
+    <button id="sound-button" type="button" aria-pressed="false">Sound off</button>
+    <button id="voice-button" type="button" aria-pressed="true">Voice on</button>
+  </nav>
+  <audio id="voice-audio" preload="auto"></audio>
+
+  <script>
+    const canvas = document.getElementById('night-sky');
+    const context = canvas.getContext('2d');
+    const playButton = document.getElementById('play-button');
+    const soundButton = document.getElementById('sound-button');
+    const voiceButton = document.getElementById('voice-button');
+    const voiceAudio = document.getElementById('voice-audio');
+    const keepsakeLink = document.getElementById('keepsake-link');
+    const seekSlider = document.getElementById('seek-slider');
+    const currentTimeDisplay = document.getElementById('current-time');
+    const totalTimeDisplay = document.getElementById('total-time');
+    const previousButton = document.getElementById('previous-button');
+    const nextButton = document.getElementById('next-button');
+    const introScene = document.getElementById('intro-scene');
+    const poemScene = document.getElementById('poem-scene');
+    const dedicationScene = document.getElementById('dedication-scene');
+    const actTitle = document.getElementById('act-title');
+    const poemLines = document.getElementById('poem-lines');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let duration = 60000;
+    const acts = [
+      {
+        start: 0,
+        end: 20000,
+        number: 'I',
+        title: 'The unsaid',
+        lines: [
+          "So much to write, but words can't bring my thoughts to light",
+          "For what I say may not be bright, in my heart I know it's right",
+          'Accept these words not by might, but like the dark accepts the night'
+        ]
+      },
+      {
+        start: 20000,
+        end: 40000,
+        number: 'II',
+        title: 'The quiet grace',
+        lines: [
+          'Calm and composed, your actions are never cold',
+          'A voice as good as gold, soft hands I love to hold',
+          'With beauty to behold, one that’s seen and never told'
+        ]
+      },
+      {
+        start: 40000,
+        end: 56000,
+        number: 'III',
+        title: 'What remains',
+        lines: [
+          'With elegance and grace, you light up every space',
+          'Your beautiful face, time cannot erase',
+          'Leaving a warm and gentle trace, no one can replace'
+        ]
+      }
+    ];
+
+    let stars = [];
+    let elapsed = 0;
+    let startedAt = 0;
+    let running = false;
+    let isScrubbing = false;
+    let currentScene = '';
+    let frameId = 0;
+    let soundEnabled = false;
+    let voiceEnabled = true;
+    let voiceCues;
+    let audioContext;
+    let ambientGain;
+    const assetRoot = location.pathname.toLowerCase().endsWith('/scola.html') ? './Scola-share/' : './';
+
+    voiceAudio.src = new URL(`${assetRoot}voice.wav`, location.href).href;
+    keepsakeLink.href = new URL(`${assetRoot}keepsake-card.html`, location.href).href;
+
+    fetch(new URL(`${assetRoot}voice-cues.json`, location.href))
+      .then((response) => {
+        if (!response.ok) throw new Error('Voice timing file is unavailable');
+        return response.json();
+      })
+      .then((cues) => {
+        voiceCues = cues;
+        duration = cues.durationMs;
+        seekSlider.max = String(duration / 1000);
+        totalTimeDisplay.textContent = formatTime(duration);
+        acts.forEach((act, index) => {
+          act.start = cues.acts[index].startMs;
+          act.end = cues.acts[index + 1]?.startMs ?? 56000;
+        });
+        updateTimeline();
+      })
+      .catch(() => {
+        voiceEnabled = false;
+        voiceButton.disabled = true;
+        voiceButton.textContent = 'Voice unavailable';
+        voiceButton.setAttribute('aria-pressed', 'false');
+      });
+
+    voiceAudio.addEventListener('error', () => {
+      voiceEnabled = false;
+      voiceButton.disabled = true;
+      voiceButton.textContent = 'Voice unavailable';
+      voiceButton.setAttribute('aria-pressed', 'false');
+    });
+
+    function resizeCanvas() {
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * pixelRatio);
+      canvas.height = Math.floor(window.innerHeight * pixelRatio);
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      stars = Array.from({ length: Math.min(110, Math.floor(window.innerWidth / 11)) }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        radius: Math.random() * 1.15 + 0.25,
+        phase: Math.random() * Math.PI * 2
+      }));
+      drawSky(performance.now());
+    }
+
+    function drawSky(time) {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      context.clearRect(0, 0, width, height);
+
+      for (const star of stars) {
+        const shimmer = reducedMotion ? 0.62 : 0.28 + (Math.sin(time * 0.0007 + star.phase) + 1) * 0.3;
+        context.beginPath();
+        context.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        context.fillStyle = `rgba(243, 238, 226, ${shimmer})`;
+        context.fill();
+      }
+
+      context.save();
+      context.beginPath();
+      context.moveTo(width * 0.12, height * 0.77);
+      context.bezierCurveTo(width * 0.31, height * 0.78, width * 0.32, height * 0.28, width * 0.53, height * 0.42);
+      context.bezierCurveTo(width * 0.73, height * 0.57, width * 0.78, height * 0.18, width * 0.91, height * 0.25);
+      context.strokeStyle = 'rgba(216, 188, 121, 0.22)';
+      context.lineWidth = 0.8;
+      context.shadowBlur = 10;
+      context.shadowColor = 'rgba(216, 188, 121, 0.28)';
+      context.stroke();
+
+      const progressAlongThread = (time * 0.000035) % 1;
+      const sparkX = width * (0.12 + progressAlongThread * 0.79);
+      const sparkY = height * (0.77 - Math.sin(progressAlongThread * Math.PI * 2) * 0.26);
+      context.beginPath();
+      context.arc(sparkX, sparkY, 1.5, 0, Math.PI * 2);
+      context.fillStyle = 'rgba(243, 221, 164, 0.9)';
+      context.shadowBlur = 12;
+      context.fill();
+      context.restore();
+
+      if (!reducedMotion) requestAnimationFrame(drawSky);
+    }
+
+    function showScene(name) {
+      if (currentScene === name) return;
+      currentScene = name;
+      introScene.hidden = name !== 'intro';
+      poemScene.hidden = name !== 'poem';
+      dedicationScene.hidden = name !== 'dedication';
+      document.body.dataset.act = name === 'poem' ? String(acts.findIndex((act) => elapsed >= act.start && elapsed < act.end) + 1) : name;
+    }
+
+    function cue(note, at) {
+      if (!soundEnabled || !audioContext || audioContext.state !== 'running') return;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = note;
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(0.016, at + 0.55);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 4.8);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(at);
+      oscillator.stop(at + 4.9);
+    }
+
+    function beginSound() {
+      const AudioContextType = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextType) {
+        soundButton.disabled = true;
+        soundButton.textContent = 'Sound unavailable';
+        return;
+      }
+      if (!audioContext) {
+        audioContext = new AudioContextType();
+        ambientGain = audioContext.createGain();
+        ambientGain.gain.value = 0;
+        ambientGain.connect(audioContext.destination);
+        [130.81, 196, 261.63].forEach((frequency, index) => {
+          const oscillator = audioContext.createOscillator();
+          const toneGain = audioContext.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.value = frequency;
+          toneGain.gain.value = [0.28, 0.12, 0.055][index];
+          oscillator.connect(toneGain);
+          toneGain.connect(ambientGain);
+          oscillator.start();
+        });
+      }
+      audioContext.resume();
+      ambientGain.gain.cancelScheduledValues(audioContext.currentTime);
+      ambientGain.gain.setTargetAtTime(soundEnabled && running ? 0.018 : 0, audioContext.currentTime, 2.4);
+      if (soundEnabled && running) cue(392, audioContext.currentTime + 0.35);
+    }
+
+    function formatTime(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    }
+
+    function updateTimeline() {
+      const seconds = elapsed / 1000;
+      if (!isScrubbing) seekSlider.value = String(seconds);
+      seekSlider.style.setProperty('--seek-progress', `${Math.min(elapsed / duration, 1) * 100}%`);
+      currentTimeDisplay.textContent = formatTime(elapsed);
+      seekSlider.setAttribute('aria-valuetext', `${Math.floor(seconds / 60)} minutes, ${Math.floor(seconds % 60)} seconds`);
+    }
+
+    function setAmbientPlaying(playing) {
+      if (!audioContext || !ambientGain) return;
+      ambientGain.gain.cancelScheduledValues(audioContext.currentTime);
+      ambientGain.gain.setTargetAtTime(soundEnabled && playing ? 0.018 : 0, audioContext.currentTime, 2.4);
+    }
+
+    function updatePresentation() {
+      const act = acts.find((item) => elapsed >= item.start && elapsed < item.end);
+
+      if (act) {
+        const actIndex = acts.indexOf(act);
+        if (currentScene !== `act-${actIndex}`) {
+          currentScene = `act-${actIndex}`;
+          showScene('poem');
+          currentScene = `act-${actIndex}`;
+          actTitle.textContent = `${act.number} · ${act.title}`;
+          poemLines.replaceChildren(...act.lines.map((line) => {
+            const paragraph = document.createElement('p');
+            paragraph.className = 'poem-line';
+            paragraph.textContent = line;
+            return paragraph;
+          }));
+          cue([392, 329.63, 293.66][actIndex], audioContext?.currentTime + 0.35);
+        }
+        const actElapsed = elapsed - act.start;
+        const lineStarts = voiceCues?.acts[actIndex].lineStartsMs;
+        poemLines.querySelectorAll('.poem-line').forEach((line, index) => {
+          const lineStart = lineStarts?.[index] ?? act.start + index * 4200;
+          line.classList.toggle('visible', elapsed >= lineStart);
+        });
+        document.body.dataset.act = String(actIndex + 1);
+      } else if (elapsed >= 56000) {
+        if (currentScene !== 'dedication') {
+          showScene('dedication');
+          cue(261.63, audioContext?.currentTime + 0.35);
+        }
+      }
+
+      updateTimeline();
+
+      if (elapsed >= duration) {
+        running = false;
+        playButton.textContent = 'Replay';
+      } else if (running) {
+        playButton.textContent = 'Pause';
+      } else {
+        playButton.textContent = elapsed > 0 ? 'Resume' : 'Begin the poem';
+      }
+    }
+
+    function render(time) {
+      if (!running) return;
+      elapsed = Math.min(voiceEnabled ? voiceAudio.currentTime * 1000 : time - startedAt, duration);
+      updatePresentation();
+      if (!running) return;
+      frameId = requestAnimationFrame(render);
+    }
+
+    function seekTo(milliseconds) {
+      elapsed = Math.max(0, Math.min(milliseconds, duration));
+      if (running) startedAt = performance.now() - elapsed;
+      if (voiceAudio.readyState > 0) voiceAudio.currentTime = elapsed / 1000;
+      updatePresentation();
+    }
+
+    playButton.addEventListener('click', () => {
+      if (running) {
+        elapsed = voiceEnabled ? voiceAudio.currentTime * 1000 : performance.now() - startedAt;
+        running = false;
+        cancelAnimationFrame(frameId);
+        voiceAudio.pause();
+        playButton.textContent = 'Resume';
+        setAmbientPlaying(false);
+        return;
+      }
+      if (elapsed >= duration) {
+        elapsed = 0;
+        currentScene = '';
+      }
+      if (elapsed === 0) {
+        currentScene = '';
+        showScene('intro');
+      }
+      voiceAudio.currentTime = elapsed / 1000;
+      startedAt = performance.now() - elapsed;
+      running = true;
+      playButton.textContent = 'Pause';
+      if (voiceEnabled) voiceAudio.play().catch(() => {
+        voiceEnabled = false;
+        voiceButton.setAttribute('aria-pressed', 'false');
+        voiceButton.textContent = 'Voice off';
+        startedAt = performance.now() - elapsed;
+      });
+      if (soundEnabled) beginSound();
+      frameId = requestAnimationFrame(render);
+    });
+
+    seekSlider.addEventListener('pointerdown', () => { isScrubbing = true; });
+    seekSlider.addEventListener('pointerup', () => { isScrubbing = false; });
+    seekSlider.addEventListener('pointercancel', () => { isScrubbing = false; });
+    seekSlider.addEventListener('input', () => {
+      seekTo(Number(seekSlider.value) * 1000);
+    });
+
+    previousButton.addEventListener('click', () => {
+      const currentAct = acts.findIndex((act) => elapsed >= act.start && elapsed < act.end);
+      const previousAct = currentAct < 0 ? acts.length - 1 : Math.max(currentAct - 1, 0);
+      seekTo(acts[previousAct].start);
+    });
+
+    nextButton.addEventListener('click', () => {
+      const currentAct = acts.findIndex((act) => elapsed >= act.start && elapsed < act.end);
+      if (currentAct < 0) return;
+      seekTo(currentAct < acts.length - 1 ? acts[currentAct + 1].start : 56000);
+    });
+
+    voiceButton.addEventListener('click', () => {
+      voiceEnabled = !voiceEnabled;
+      voiceButton.setAttribute('aria-pressed', String(voiceEnabled));
+      voiceButton.textContent = voiceEnabled ? 'Voice on' : 'Voice off';
+      if (voiceEnabled && running) {
+        voiceAudio.currentTime = elapsed / 1000;
+        voiceAudio.play();
+      } else if (!voiceEnabled) {
+        if (running) {
+          elapsed = voiceAudio.currentTime * 1000;
+          startedAt = performance.now() - elapsed;
+        }
+        voiceAudio.pause();
+      }
+    });
+
+    soundButton.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundButton.setAttribute('aria-pressed', String(soundEnabled));
+      soundButton.textContent = soundEnabled ? 'Sound on' : 'Sound off';
+      if (soundEnabled) beginSound();
+      else setAmbientPlaying(false);
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+  </script>
+</body>
+</html>
